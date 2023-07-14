@@ -24,11 +24,33 @@ declare global {
 }
 
 // define Stamp here
+
+interface Stamp {
+  id: number
+  stamp: string
+}
+
+interface UserStruct {
+  id: number;
+  address: string;
+  score: number;
+  stampProviders: Array<Stamp>;
+}
+
 // define UserStruct here
 
 export default function Passport() {
   // here we deal with any local state we need to manage
   const [address, setAddress] = useState<string>('')
+  const [userInfo, setUserInfo] = useState<Array<UserStruct>>([
+        { id: 0, address: '0x3c9840c489bb3b95cbf7a449dba55ab022cf522c', score: 23, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Lens' }] },
+    { id: 1, address: '0x49bbd0c489bb3b95cbf7a44955aa55b022c1fff5', score: 19, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Google' }] },
+    { id: 2, address: '0x5b985cbf40c489b5cbf7ffa449dba55ab022c1fb', score: 15, stampProviders: [{ id: 0, stamp: 'Google' }, { id: 1, stamp: 'Twitter' }] },
+    { id: 3, address: '0x6e9840c41ffb3b95cbf7adba9dba55ab01fff5a4', score: 28, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Lens' }] }])
+  const [trustedUsers, setTrustedUsers] = useState<Array<UserStruct>>([])
+  const [showTrusted, setShowTrusted] = useState<boolean>(false)
+  const [showStamps, setShowStamps] = useState<boolean>(false)
+
 
   useEffect(() => {
     checkConnection()
@@ -39,6 +61,8 @@ export default function Passport() {
         // if the user is connected, set their account
         if (accounts && accounts[0]) {
           setAddress(accounts[0].address)
+          checkPassport(accounts[0].address)
+
         }
       } catch (err) {
         console.log('not connected...')
@@ -50,6 +74,8 @@ export default function Passport() {
     try {
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
       setAddress(accounts[0])
+      checkPassport(accounts[0])
+
     } catch (err) {
       console.log('error connecting...')
     }
@@ -96,9 +122,82 @@ export default function Passport() {
   
   // add checkPassport() here
   
-  // add getPassportScore() here
+    async function checkPassport(currentAddress = address) {
+    let score: number = await getPassportScore(currentAddress) as number
+    let stampProviders = await getPassportStamps(currentAddress) as Array<string>
+      let stamps: Array<Stamp> = []
+      if (stampProviders && stampProviders.length) {
+
+        for (var i = 0; i < stampProviders.length; i++) {
+          let s: Stamp = { id: i, stamp: stampProviders[i] }
+          stamps.push(s)
+        }
+      }
+    const id = userInfo.length + 1
+    let user: UserStruct = { id: id, address: currentAddress, score: score, stampProviders: stamps }
+    console.log(user)
+    if (userInfo.map(user => user.address).includes(currentAddress || currentAddress.toUpperCase())) {
+      console.log("address already checked")
+    } else {
+      console.log("adding user to state var")
+      console.log("userInfo", userInfo)
+      setUserInfo(userInfo.concat(user))
+    }
+    console.log("userInfo", userInfo)
+  }
+
+  
+ 
+  // add  get passportScore 
+   async function getPassportScore(currentAddress: string) {
+     console.log("in getScore()")
+    const stampProviderArray = []
+
+    const GET_PASSPORT_SCORE_URI = `https://api.scorer.gitcoin.co/registry/score/${SCORERID}/${currentAddress}`
+    try {
+      const response: Response = await fetch(GET_PASSPORT_SCORE_URI, {
+        headers
+      })
+      const data = await response.json()
+      const passportData = await response.json()
+      if (passportData.score) {
+        // if the user has a score, round it and set it in the local state
+        const roundedScore = Math.round(passportData.score * 100) / 100
+        return roundedScore
+      } else {
+        // if the user has no score, display a message letting them know to submit thier passporta
+        console.log('No score available, please add stamps to your passport and then resubmit.')
+      }
+        
+      for (const i of data.items) {
+        stampProviderArray.push(i.credential.credentialSubject.provider)
+      }
+    return stampProviderArray
+
+    } catch (err) {
+      console.log('error: ', err)
+    }
+  }
+
   
   // add getPassportStamps() here
+
+    async function getPassportStamps(currentAddress: string) {
+    console.log("in getStamps()")
+    const stampProviderArray = []
+    const GET_PASSPORT_STAMPS_URI = `https://api.scorer.gitcoin.co/registry/stamps/${currentAddress}`
+    try {
+      const response: Response = await fetch(GET_PASSPORT_STAMPS_URI, { headers })
+      const data = await response.json()
+      // parse stamp data from json
+      for (const i of data.items) {
+        stampProviderArray.push(i.credential.credentialSubject.provider)
+      }
+      return stampProviderArray
+    } catch (err) {
+      console.log('error: ', err)
+    }
+  }
 
   // add updateShowTrusted() here
     
@@ -124,6 +223,7 @@ export default function Passport() {
           <Button colorScheme='teal' variant='outline' onClick={connect}>Connect</Button>
           <Button colorScheme='teal' variant='outline' onClick={submitPassport}>Submit Passport</Button>
         </Stack>
+        
       </ChakraProvider >
     </div >
   )
