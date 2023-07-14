@@ -244,6 +244,10 @@ function checkTrustedUsers() {
           
         </Stack>
                 <div>
+                      <br />
+          {showTrusted && <h3><b>Trusted users</b></h3>}
+          <br />
+          {showTrusted && trustedUsers.map(user => <ul key={user.id}> {user.address} </ul>)}
 </div>
 
       </ChakraProvider >
