@@ -209,15 +209,26 @@ export default function Passport() {
     }
   }
   // add updateShowStamps() here
-
+ const updateShowStamps = () => {
+    if (showStamps === false) {
+      setShowStamps(true)
+      console.log("stamps = true")
+    } else {
+      setShowStamps(false)
+      console.log("stamps = false")
+    }
+  }
   // add checkTrustedUsers() here
-function checkTrustedUsers() {
+   function checkTrustedUsers() {
     return userInfo.filter(user => user.stampProviders.filter(
       provider => provider.stamp.includes('Lens')
         && (provider.stamp.includes("Github"))
     )
     ).filter(user => user.score > 20)
   }
+
+
+
 
   const styles = {
     main: {
@@ -241,14 +252,19 @@ function checkTrustedUsers() {
           <Button colorScheme='teal' variant='outline' onClick={updateShowTrusted}>Check Users</Button>
 
           <Button colorScheme='teal' variant='outline' onClick={submitPassport}>Submit Passport</Button>
-          
+         <Checkbox colorScheme='telegram' onChange={updateShowStamps}>Show stamps</Checkbox>
+
         </Stack>
                 <div>
                       <br />
           {showTrusted && <h3><b>Trusted users</b></h3>}
           <br />
           {showTrusted && trustedUsers.map(user => <ul key={user.id}> {user.address} </ul>)}
-</div>
+        </div>
+         {showStamps &&
+          <SimpleGrid columns={3} spacing='10px' marginTop={30}>
+            {showTrusted && showStamps && trustedUsers.map(user => user.stampProviders.map(s => <Badge key={s.id} colorScheme='green'>{s.stamp}:{user.address.substring(0, 5)}</Badge>))}
+          </SimpleGrid>}
 
       </ChakraProvider >
     </div >
