@@ -43,7 +43,7 @@ export default function Passport() {
   // here we deal with any local state we need to manage
   const [address, setAddress] = useState<string>('')
   const [userInfo, setUserInfo] = useState<Array<UserStruct>>([
-        { id: 0, address: '0x3c9840c489bb3b95cbf7a449dba55ab022cf522c', score: 23, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Lens' }] },
+    { id: 0, address: '0x3c9840c489bb3b95cbf7a449dba55ab022cf522c', score: 23, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Lens' }] },
     { id: 1, address: '0x49bbd0c489bb3b95cbf7a44955aa55b022c1fff5', score: 19, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Google' }] },
     { id: 2, address: '0x5b985cbf40c489b5cbf7ffa449dba55ab022c1fb', score: 15, stampProviders: [{ id: 0, stamp: 'Google' }, { id: 1, stamp: 'Twitter' }] },
     { id: 3, address: '0x6e9840c41ffb3b95cbf7adba9dba55ab01fff5a4', score: 28, stampProviders: [{ id: 0, stamp: 'Github' }, { id: 1, stamp: 'Lens' }] }])
@@ -119,20 +119,20 @@ export default function Passport() {
       console.log('error: ', err)
     }
   }
-  
+
   // add checkPassport() here
-  
-    async function checkPassport(currentAddress = address) {
+
+  async function checkPassport(currentAddress = address) {
     let score: number = await getPassportScore(currentAddress) as number
     let stampProviders = await getPassportStamps(currentAddress) as Array<string>
-      let stamps: Array<Stamp> = []
-      if (stampProviders && stampProviders.length) {
+    let stamps: Array<Stamp> = []
+    if (stampProviders && stampProviders.length) {
 
-        for (var i = 0; i < stampProviders.length; i++) {
-          let s: Stamp = { id: i, stamp: stampProviders[i] }
-          stamps.push(s)
-        }
+      for (var i = 0; i < stampProviders.length; i++) {
+        let s: Stamp = { id: i, stamp: stampProviders[i] }
+        stamps.push(s)
       }
+    }
     const id = userInfo.length + 1
     let user: UserStruct = { id: id, address: currentAddress, score: score, stampProviders: stamps }
     console.log(user)
@@ -146,11 +146,11 @@ export default function Passport() {
     console.log("userInfo", userInfo)
   }
 
-  
- 
+
+
   // add  get passportScore 
-   async function getPassportScore(currentAddress: string) {
-     console.log("in getScore()")
+  async function getPassportScore(currentAddress: string) {
+    console.log("in getScore()")
     const stampProviderArray = []
 
     const GET_PASSPORT_SCORE_URI = `https://api.scorer.gitcoin.co/registry/score/${SCORERID}/${currentAddress}`
@@ -168,21 +168,21 @@ export default function Passport() {
         // if the user has no score, display a message letting them know to submit thier passporta
         console.log('No score available, please add stamps to your passport and then resubmit.')
       }
-        
+
       for (const i of data.items) {
         stampProviderArray.push(i.credential.credentialSubject.provider)
       }
-    return stampProviderArray
+      return stampProviderArray
 
     } catch (err) {
       console.log('error: ', err)
     }
   }
 
-  
+
   // add getPassportStamps() here
 
-    async function getPassportStamps(currentAddress: string) {
+  async function getPassportStamps(currentAddress: string) {
     console.log("in getStamps()")
     const stampProviderArray = []
     const GET_PASSPORT_STAMPS_URI = `https://api.scorer.gitcoin.co/registry/stamps/${currentAddress}`
@@ -200,10 +200,24 @@ export default function Passport() {
   }
 
   // add updateShowTrusted() here
-    
+  const updateShowTrusted = () => {
+    setTrustedUsers(checkTrustedUsers)
+    if (showTrusted === false) {
+      setShowTrusted(true)
+    } else {
+      setShowTrusted(false)
+    }
+  }
   // add updateShowStamps() here
-  
+
   // add checkTrustedUsers() here
+function checkTrustedUsers() {
+    return userInfo.filter(user => user.stampProviders.filter(
+      provider => provider.stamp.includes('Lens')
+        && (provider.stamp.includes("Github"))
+    )
+    ).filter(user => user.score > 20)
+  }
 
   const styles = {
     main: {
@@ -219,11 +233,19 @@ export default function Passport() {
       <ChakraProvider>
         <Heading as='h1' size='4xl' noOfLines={1}>Are you a trusted user?</Heading>
         <Text as='b'>If you have a score above 20, a Github Stamp AND a Lens Stamp, you are a trusted user!</Text>
+        <br />
+                <Text as='b'>Click the Check Users button to find out!</Text>
+        <br />
         <Stack spacing={3} direction='row' align='center' marginTop={30}>
           <Button colorScheme='teal' variant='outline' onClick={connect}>Connect</Button>
+          <Button colorScheme='teal' variant='outline' onClick={updateShowTrusted}>Check Users</Button>
+
           <Button colorScheme='teal' variant='outline' onClick={submitPassport}>Submit Passport</Button>
+          
         </Stack>
-        
+                <div>
+</div>
+
       </ChakraProvider >
     </div >
   )
