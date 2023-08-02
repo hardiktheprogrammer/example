@@ -250,7 +250,7 @@ export default function Passport() {
         <Stack spacing={3} direction='row' align='center' marginTop={30}>
           <Button colorScheme='teal' variant='outline' onClick={connect}>Connect</Button>
           <Button colorScheme='teal' variant='outline' onClick={updateShowTrusted}>Check Users</Button>
-
+    
           <Button colorScheme='teal' variant='outline' onClick={submitPassport}>Submit Passport</Button>
          <Checkbox colorScheme='telegram' onChange={updateShowStamps}>Show stamps</Checkbox>
 
